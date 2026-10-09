@@ -1,0 +1,117 @@
+/**
+ * Sistema visivo: "libro moderno sobrio".
+ * Carta calda, serif per la narrativa, sans per l'interfaccia,
+ * nessuna decorazione: la pagina deve sparire dietro al testo.
+ */
+
+:root {
+  /* Carta e inchiostro — tema chiaro */
+  --paper: #f7f3ec;
+  --surface: #fffdf9;
+  --surface-sunken: #efe9df;
+  --ink: #23201c;
+  --ink-soft: #4e4840;
+  --ink-muted: #7a7267;
+  --line: #ded5c7;
+  --line-strong: #c5b9a7;
+
+  --accent: #2f5663;
+  --accent-soft: #e2ecef;
+  --accent-ink: #1e3c47;
+
+  --gain: #3f6b43;
+  --gain-soft: #e4efe3;
+  --loss: #8d4132;
+  --loss-soft: #f6e5e0;
+
+  /* Tipografia */
+  --font-ui: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-read-serif: 'Lora', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  --font-read-sans: var(--font-ui);
+  --font-read: var(--font-read-serif);
+
+  /* Scala tipografica, passo 1.25 a partire da 16px */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: 2.125rem;
+
+  /* La dimensione del testo narrativo è regolabile dal lettore */
+  --reading-size: 1.125rem;
+  --reading-leading: 1.72;
+  /* In ch, così la misura resta di ~68 caratteri a ogni dimensione del testo */
+  --reading-measure: 68ch;
+
+  /* Spaziature, passo 4px */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.5rem;
+  --s-6: 2rem;
+  --s-7: 3rem;
+  --s-8: 4rem;
+
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+
+  --shadow-sm: 0 1px 3px rgb(35 32 28 / 0.07), 0 1px 2px rgb(35 32 28 / 0.04);
+  --shadow: 0 4px 12px rgb(35 32 28 / 0.08), 0 2px 4px rgb(35 32 28 / 0.05);
+  --shadow-lg: 0 16px 40px rgb(35 32 28 / 0.12), 0 4px 8px rgb(35 32 28 / 0.06);
+
+  /* Easing a molla: nessuna transizione è lineare. */
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Area sicura per le azioni, pollice in basso */
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  --tap: 48px; /* bersaglio minimo di tocco */
+  --tap-choice: 56px; /* le scelte sono l'azione principale: più grandi */
+}
+
+:root[data-theme='dark'] {
+  --paper: #17151a;
+  --surface: #201d23;
+  --surface-sunken: #110f13;
+  --ink: #ebe5dc;
+  --ink-soft: #c2bab0;
+  --ink-muted: #8c847a;
+  --line: #342f39;
+  --line-strong: #4a434f;
+
+  --accent: #8fbcc8;
+  --accent-soft: #24323a;
+  --accent-ink: #c3dfe7;
+
+  --gain: #8cc091;
+  --gain-soft: #203022;
+  --loss: #d99181;
+  --loss-soft: #352020;
+
+  --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.28), 0 1px 2px rgb(0 0 0 / 0.2);
+  --shadow: 0 4px 14px rgb(0 0 0 / 0.36), 0 2px 4px rgb(0 0 0 / 0.2);
+  --shadow-lg: 0 16px 48px rgb(0 0 0 / 0.5), 0 4px 8px rgb(0 0 0 / 0.28);
+}
+
+:root[data-reading-font='sans'] {
+  --font-read: var(--font-read-sans);
+}
+
+/* Chi preferisce meno movimento non lo subisce. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
