@@ -119,6 +119,28 @@ button {
   backdrop-filter: blur(16px) saturate(1.4);
   -webkit-backdrop-filter: blur(16px) saturate(1.4);
   border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  transition: opacity 0.3s var(--ease-out), background 0.3s var(--ease-out), backdrop-filter 0.3s var(--ease-out);
+  opacity: 1;
+}
+
+/* Topbar morph states */
+.topbar[data-visible='false'] {
+  opacity: 0;
+  backdrop-filter: none;
+}
+
+.topbar[data-visible='dim'] {
+  opacity: 0.3;
+  backdrop-filter: blur(8px);
+}
+
+/* Mobile: topbar non scompare mai */
+@media (max-width: 640px) {
+  .topbar[data-visible='false'],
+  .topbar[data-visible='dim'] {
+    opacity: 0.4;
+    backdrop-filter: blur(12px);
+  }
 }
 
 .topbar__inner {
@@ -820,7 +842,49 @@ button {
   width: 100%;
   max-width: var(--reading-measure);
   margin-inline: auto;
-  padding: var(--s-5) var(--s-4) var(--s-8);
+  padding: var(--s-7) var(--s-4) calc(var(--s-8) + 56px + var(--safe-bottom));
+  scroll-behavior: smooth;
+  animation: pageIn 0.4s var(--ease-spring) 0.1s both;
+}
+
+/* Progress bar al top */
+.reader::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 25;
+  height: 2px;
+  width: var(--progress-percent, 0%);
+  background: var(--accent);
+  opacity: 0.6;
+  transition: width 0.4s var(--ease-out);
+}
+
+.reader__page[data-transitioning='out'] {
+  animation: pageOut 0.25s var(--ease-out) forwards;
+}
+
+@keyframes pageOut {
+  from {
+    opacity: 1;
+    filter: blur(0px);
+  }
+  to {
+    opacity: 0;
+    filter: blur(2px);
+  }
+}
+
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    filter: blur(1px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0px);
+  }
 }
 
 @media (min-width: 900px) {
@@ -855,8 +919,55 @@ button {
      una colonna piena di trattini, anche su schermo stretto. */
 }
 
+.prose p {
+  opacity: 0;
+  transform: translateY(4px);
+  animation: textRise 0.5s var(--ease-spring) both;
+}
+
+.prose p:nth-child(1) { animation-delay: 0ms; }
+.prose p:nth-child(2) { animation-delay: 50ms; }
+.prose p:nth-child(3) { animation-delay: 100ms; }
+.prose p:nth-child(4) { animation-delay: 150ms; }
+.prose p:nth-child(5) { animation-delay: 200ms; }
+.prose p:nth-child(6) { animation-delay: 250ms; }
+.prose p:nth-child(n+7) { animation-delay: 300ms; }
+
+@keyframes textRise {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .prose p + p {
   margin-top: var(--s-4);
+}
+
+/* Ogni 5 paragrafi, respiro maggiore */
+.prose p:nth-child(5n) + p {
+  margin-top: var(--s-5);
+}
+
+/* Rispetta prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .prose p {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .reader__page {
+    animation: none;
+  }
+
+  .reader__page[data-transitioning='out'] {
+    animation: none;
+  }
 }
 
 /* Capolettera: il primo paragrafo del libro, non di ogni schermata. */
@@ -1003,8 +1114,26 @@ button {
   z-index: 15;
   background: color-mix(in srgb, var(--paper) 92%, transparent);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--line);
   padding-bottom: var(--safe-bottom);
+  transform: translateY(0);
+  transition: transform 0.35s var(--ease-spring), opacity 0.3s var(--ease-out);
+  opacity: 1;
+}
+
+/* Reader-bar morph states */
+.reader-bar[data-visible='false'] {
+  transform: translateY(100%);
+  opacity: 0;
+}
+
+/* Mobile: reader-bar mostra solo 12px della border-top */
+@media (max-width: 640px) {
+  .reader-bar[data-visible='false'] {
+    transform: translateY(calc(100% - 12px));
+    opacity: 0.4;
+  }
 }
 
 .reader-bar__inner {

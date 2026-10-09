@@ -11,20 +11,129 @@ export function Reader({ book, run, onChoose, onBack, onLeave, onSettings }) {
   const scelte = visibleChoices(book, run)
   const unaSolaStrada = scelte.length === 1 && scelte[0].available
   const testa = useRef(null)
+  const topbarRef = useRef(null)
+  const readerBarRef = useRef(null)
+  const scrollTimeoutRef = useRef(null)
+  const readerBarTimeoutRef = useRef(null)
+  const isMobileRef = useRef(false)
+
+  // Scroll listener per topbar e reader-bar morph
+  useEffect(() => {
+    // Rileva mobile al mount
+    isMobileRef.current = window.innerWidth <= 640
+
+    const updateTopbar = () => {
+      if (!topbarRef.current) return
+      const isScrolling = window.scrollY > 0
+      topbarRef.current.setAttribute('data-visible', isScrolling ? 'true' : 'false')
+
+      // Debounce di 3s per topbar
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current)
+      if (isScrolling && !isMobileRef.current) {
+        scrollTimeoutRef.current = setTimeout(() => {
+          if (topbarRef.current && window.scrollY > 0) {
+            topbarRef.current.setAttribute('data-visible', 'dim')
+          }
+        }, 3000)
+      }
+    }
+
+    const updateReaderBar = () => {
+      if (!readerBarRef.current) return
+      // Reader bar visibile quando ci sono scelte o quando scrollato
+      const hasChoices = scelte.length > 0
+      readerBarRef.current.setAttribute('data-visible', hasChoices ? 'true' : 'false')
+
+      // Debounce di 2s per reader-bar
+      if (readerBarTimeoutRef.current) clearTimeout(readerBarTimeoutRef.current)
+      if (hasChoices && !isMobileRef.current) {
+        readerBarTimeoutRef.current = setTimeout(() => {
+          if (readerBarRef.current) {
+            readerBarRef.current.setAttribute('data-visible', 'false')
+          }
+        }, 2000)
+      }
+    }
+
+    const handleScroll = () => {
+      updateTopbar()
+    }
+
+    const handleMouseMove = () => {
+      // Topbar visibile al mousemove (desktop only)
+      if (!isMobileRef.current && topbarRef.current) {
+        topbarRef.current.setAttribute('data-visible', 'true')
+        if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current)
+        scrollTimeoutRef.current = setTimeout(() => {
+          if (topbarRef.current && window.scrollY > 0) {
+            topbarRef.current.setAttribute('data-visible', 'dim')
+          }
+        }, 3000)
+      }
+    }
+
+    const handleChoiceClick = () => {
+      // Reader-bar sempre visibile quando si clicca una scelta
+      if (readerBarRef.current) {
+        readerBarRef.current.setAttribute('data-visible', 'true')
+        if (readerBarTimeoutRef.current) clearTimeout(readerBarTimeoutRef.current)
+        readerBarTimeoutRef.current = setTimeout(() => {
+          if (readerBarRef.current && !isMobileRef.current) {
+            readerBarRef.current.setAttribute('data-visible', 'false')
+          }
+        }, 4000)
+      }
+    }
+
+    // Setup iniziale
+    updateTopbar()
+    updateReaderBar()
+
+    window.addEventListener('scroll', handleScroll)
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('readerchoice', handleChoiceClick)
+
+    // Resize listener per mobile detection
+    const handleResize = () => {
+      isMobileRef.current = window.innerWidth <= 640
+    }
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('readerchoice', handleChoiceClick)
+      window.removeEventListener('resize', handleResize)
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current)
+      if (readerBarTimeoutRef.current) clearTimeout(readerBarTimeoutRef.current)
+    }
+  }, [scelte.length])
 
   // A ogni paragrafo il fuoco torna in cima e il titolo della pagina cambia:
   // chi usa uno screen reader deve capire di essere altrove.
   useEffect(() => {
     document.title = `Paragrafo ${step.nodeId} — ${book.title}`
     testa.current?.focus()
-    window.scrollTo({ top: 0, behavior: 'instant' })
-  }, [step.nodeId, run.steps.length, book.title])
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+
+    // Imposta reader-bar visibile al cambio di paragrafo
+    if (readerBarRef.current) {
+      readerBarRef.current.setAttribute('data-visible', 'true')
+      if (readerBarTimeoutRef.current) clearTimeout(readerBarTimeoutRef.current)
+    }
+
+    // Calcola e imposta il progress bar
+    const startNode = book.setup.startNode || 1
+    const totalNodes = book.setup.totalNodes || 1
+    const progressPercent = ((step.nodeId - startNode) / (totalNodes - startNode)) * 100
+    document.documentElement.style.setProperty('--progress-percent', `${Math.max(0, Math.min(100, progressPercent))}%`)
+  }, [step.nodeId, run.steps.length, book.title, book.setup])
 
   const puoTornare = run.steps.length > 1
 
   return (
     <>
-      <header className="topbar topbar--reader">
+      <header className="topbar topbar--reader" ref={topbarRef} data-visible="true">
         <div className="wrap topbar__inner">
           <button className="icon-btn" onClick={onLeave} aria-label="Esci dalla lettura e salva">
             <IconBack />
@@ -97,11 +206,15 @@ export function Reader({ book, run, onChoose, onBack, onLeave, onSettings }) {
           )}
         </main>
 
-        <div className="reader-bar">
+        <div className="reader-bar" ref={readerBarRef} data-visible="true">
           <div className="reader-bar__inner">
             <button
               className="icon-btn"
-              onClick={onBack}
+              onClick={() => {
+                onBack()
+                // Dispatch custom event per reader-bar
+                window.dispatchEvent(new Event('readerchoice'))
+              }}
               disabled={!puoTornare}
               aria-label="Torna alla scelta precedente"
             >
@@ -175,7 +288,11 @@ function Choice({ scelta, indice, book, onChoose }) {
   }
 
   return (
-    <button className="choice" onClick={() => onChoose(scelta)}>
+    <button className="choice" onClick={() => {
+      onChoose(scelta)
+      // Dispatch custom event per reader-bar
+      window.dispatchEvent(new Event('readerchoice'))
+    }}>
       <span>{scelta.text}</span>
       <IconArrow className="choice__arrow" width={18} height={18} />
     </button>
