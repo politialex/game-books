@@ -11,11 +11,39 @@ export function Reader({ book, run, onChoose, onBack, onLeave, onSettings }) {
   const scelte = visibleChoices(book, run)
   const unaSolaStrada = scelte.length === 1 && scelte[0].available
   const testa = useRef(null)
+  const pageRef = useRef(null)
   const topbarRef = useRef(null)
   const readerBarRef = useRef(null)
   const scrollTimeoutRef = useRef(null)
   const readerBarTimeoutRef = useRef(null)
   const isMobileRef = useRef(false)
+
+  // Wrapper con animazione pageOut prima di ogni cambio paragrafo
+  const scegli = (scelta) => {
+    const el = pageRef.current
+    if (el && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      el.setAttribute('data-transitioning', 'out')
+      setTimeout(() => {
+        el.removeAttribute('data-transitioning')
+        onChoose(scelta)
+      }, 250)
+    } else {
+      onChoose(scelta)
+    }
+  }
+
+  const tornaIndietro = () => {
+    const el = pageRef.current
+    if (el && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      el.setAttribute('data-transitioning', 'out')
+      setTimeout(() => {
+        el.removeAttribute('data-transitioning')
+        onBack()
+      }, 250)
+    } else {
+      onBack()
+    }
+  }
 
   // Scroll listener per topbar e reader-bar morph
   useEffect(() => {
@@ -116,13 +144,21 @@ export function Reader({ book, run, onChoose, onBack, onLeave, onSettings }) {
     testa.current?.focus()
     window.scrollTo({ top: 0, behavior: 'smooth' })
 
-    // Imposta reader-bar visibile al cambio di paragrafo
+    // Riattiva pageIn rimuovendo e riapplicando l'animazione
+    const el = pageRef.current
+    if (el && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      el.style.animation = 'none'
+      void el.offsetHeight
+      el.style.animation = ''
+    }
+
+    // Reader-bar visibile al cambio di paragrafo
     if (readerBarRef.current) {
       readerBarRef.current.setAttribute('data-visible', 'true')
       if (readerBarTimeoutRef.current) clearTimeout(readerBarTimeoutRef.current)
     }
 
-    // Calcola e imposta il progress bar
+    // Progress bar
     const startNode = book.setup.startNode || 1
     const totalNodes = book.setup.totalNodes || 1
     const progressPercent = ((step.nodeId - startNode) / (totalNodes - startNode)) * 100
@@ -150,7 +186,7 @@ export function Reader({ book, run, onChoose, onBack, onLeave, onSettings }) {
       </header>
 
       <div className="reader">
-        <main className="reader__page" id="contenuto">
+        <main className="reader__page" id="contenuto" ref={pageRef}>
           <h1
             className="reader__number"
             tabIndex={-1}
@@ -199,7 +235,7 @@ export function Reader({ book, run, onChoose, onBack, onLeave, onSettings }) {
               </p>
               <div role="group" aria-labelledby="etichetta-scelte" style={{ display: 'grid', gap: 'var(--s-3)' }}>
                 {scelte.map((scelta, i) => (
-                  <Choice key={i} scelta={scelta} indice={i} book={book} onChoose={onChoose} />
+                  <Choice key={i} scelta={scelta} indice={i} book={book} onChoose={scegli} />
                 ))}
               </div>
             </div>
@@ -211,8 +247,7 @@ export function Reader({ book, run, onChoose, onBack, onLeave, onSettings }) {
             <button
               className="icon-btn"
               onClick={() => {
-                onBack()
-                // Dispatch custom event per reader-bar
+                tornaIndietro()
                 window.dispatchEvent(new Event('readerchoice'))
               }}
               disabled={!puoTornare}
