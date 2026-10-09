@@ -430,7 +430,7 @@ button {
   height: 100%;
   text-align: left;
   /* Double-bezel: involucro esterno */
-  padding: 6px;
+  padding: 3px;
   border-radius: var(--radius-xl);
   border: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
   background: color-mix(in srgb, var(--surface-sunken) 50%, transparent);
@@ -444,7 +444,7 @@ button {
   width: 100%;
   height: 100%;
   padding: var(--s-3);
-  border-radius: calc(var(--radius-xl) - 6px);
+  border-radius: calc(var(--radius-xl) - 3px);
   background: var(--surface);
   box-shadow: inset 0 1px 1px rgb(255 255 255 / 0.6);
   transition: background 0.22s var(--ease-out);
@@ -517,6 +517,8 @@ button {
   flex: none;
   width: 72px;
   aspect-ratio: 2 / 3;
+  height: auto; /* evita che flex-stretch ignori aspect-ratio */
+  align-self: flex-start;
   border-radius: var(--radius-sm);
   overflow: hidden;
   position: relative;
@@ -641,7 +643,7 @@ button {
 .panel {
   margin-top: var(--s-6);
   /* Double-bezel */
-  padding: 5px;
+  padding: 3px;
   border: 1px solid color-mix(in srgb, var(--line) 75%, transparent);
   border-radius: var(--radius-xl);
   background: color-mix(in srgb, var(--surface-sunken) 40%, transparent);
@@ -649,7 +651,7 @@ button {
 
 .panel__inner {
   padding: var(--s-5);
-  border-radius: calc(var(--radius-xl) - 5px);
+  border-radius: calc(var(--radius-xl) - 3px);
   background: var(--surface);
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.5);
 }
